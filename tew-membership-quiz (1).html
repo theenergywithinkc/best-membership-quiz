@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TEW Membership Finder</title>
+<style>
+:root{--teal:#0CA4A5;--ink:#0b2230;--muted:#45636b;--soft:#eef7f7;--line:#e6efef;}
+*{box-sizing:border-box}
+body{margin:0;background:#f9fbfb;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:var(--ink)}
+.wrap{max-width:900px;margin:0 auto;padding:44px 20px}
+h1{margin:0 0 8px;font-size:2rem;line-height:1.2;font-weight:900}
+.sub{margin:0 0 18px;color:var(--muted)}
+.stage{overflow:hidden;border-radius:16px}
+.track{display:flex;transition:transform .45s ease}
+.step{min-width:100%;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 18px rgba(0,0,0,.06);padding:18px;margin-right:16px}
+.step:last-child{margin-right:0}
+fieldset{border:0;margin:0;padding:0}
+legend{font-weight:800;margin:0 0 10px}
+.hint{margin:0 0 10px;color:#6a7b82;font-size:.9rem}
+.opt{display:flex;gap:10px;padding:12px;border-radius:12px;color:#27444b;cursor:pointer}
+.opt+.opt{margin-top:8px}
+.opt:hover{background:var(--soft)}
+.opt input{margin-top:.25rem}
+.controls{margin:14px 2px 10px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.btn{background:var(--teal);color:#fff;border:0;padding:10px 16px;border-radius:12px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;min-width:120px;transition:transform .12s,box-shadow .18s}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.btn:hover:not([disabled]){transform:translateY(-1px);box-shadow:0 8px 18px rgba(0,0,0,.12)}
+.back{background:#e9f5f5;color:#teal}
+.count{color:var(--muted);font-weight:700}
+.progress{height:10px;background:#eaf2f2;border-radius:999px;overflow:hidden}
+.bar{height:100%;background:var(--teal);width:11%}
+.result{margin-top:20px;display:grid;gap:14px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 18px rgba(0,0,0,.06);padding:18px}
+.pill{display:inline-block;background:#e9f5f5;color:#0CA4A5;border-radius:999px;padding:6px 10px;font-weight:800;font-size:.8rem;margin-bottom:8px}
+.card h3{margin:0 0 6px;font-size:1.35rem;font-weight:900}
+.why{margin:0 0 12px;color:#27444b}
+.ctas{display:flex;gap:12px;flex-wrap:wrap}
+.a{display:inline-flex;align-items:center;justify-content:center;padding:12px 16px;border-radius:12px;font-weight:800;text-decoration:none;letter-spacing:.4px;text-transform:uppercase;font-size:.9rem}
+.primary{background:#0CA4A5;color:#fff}
+.ghost{background:#fff;color:#0CA4A5;border:2px solid #0CA4A5}
+.secondary{background:#fff;border:1px dashed #cfe6e6;border-radius:12px;padding:14px 16px;color:#27444b}
+.secondary h4{margin:0 0 6px}
+.link{color:#0CA4A5;font-weight:800;text-decoration:none;border-bottom:2px solid #0CA4A5}
+.link:hover{opacity:.9}
+.retake{display:flex;justify-content:center;margin-top:8px}
+@media(max-width:640px){h1{font-size:1.75rem}.step{margin-right:12px;padding:16px}}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Find the Membership that Matches Your Energy</h1>
+    <p class="sub">Answer a few questions—your best fit will appear at the end.</p>
+
+    <div class="stage">
+      <div class="track" id="track"></div>
+    </div>
+
+    <div class="controls">
+      <button class="btn back" id="back" disabled>Back</button>
+      <div class="count"><span id="num">1</span>/<span id="total">9</span></div>
+      <button class="btn" id="next" disabled>Next</button>
+    </div>
+
+    <div class="progress"><div class="bar" id="bar"></div></div>
+
+    <div id="result" class="result" hidden>
+      <div class="card">
+        <div class="pill">Best Match</div>
+        <h3 id="topName"></h3>
+        <p id="topWhy" class="why"></p>
+        <div class="ctas">
+          <a id="topJoin" class="a primary" href="#" rel="noopener">Join Now</a>
+          <a id="topDetails" class="a ghost" href="https://www.theenergywithinkc.com/become-a-member" rel="noopener">See Details</a>
+        </div>
+      </div>
+      <div class="secondary">
+        <h4>Runner-Up</h4>
+        <p id="secondLine"></p>
+        <a id="secondLink" class="link" href="#" rel="noopener">Explore This Option</a>
+      </div>
+      <div class="retake">
+        <button id="retake" class="btn">Retake Quiz</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* Links */
+const LINKS = {
+  unlimited:{join:"https://momence.com/The-Energy-Within/membership/Monthly%3A-Unlimited-Classes-Membership/291896",details:"https://www.theenergywithinkc.com/become-a-member"},
+  founding:{join:"https://momence.com/m/306920",details:"https://www.theenergywithinkc.com/become-a-member"},
+  align:{join:"https://momence.com/m/421971",details:"https://www.theenergywithinkc.com/become-a-member"},
+  awaken:{join:"https://momence.com/m/412881",details:"https://www.theenergywithinkc.com/become-a-member"},
+  balance:{join:"https://momence.com/m/391116",details:"https://www.theenergywithinkc.com/become-a-member"},
+  classpack:{join:"https://momence.com/m/306475",details:"https://www.theenergywithinkc.com/become-a-member"}
+};
+/* Weights */
+const W = {
+  q1:{beginner:{awaken:2,align:1,balance:1},"some-consistency":{unlimited:2,align:1,awaken:1},"commit-dontknow":{align:2,balance:1,awaken:1},"ready-deepen":{unlimited:2,founding:2,awaken:1}},
+  q2:{"calm-stress":{align:3},"physical-healing":{align:2,unlimited:1},"clarity-guidance":{awaken:3},"deeper-modalities":{awaken:3},"intuition-tools":{awaken:2,align:1},community:{unlimited:2,founding:2,balance:1}},
+  q3:{"move-breath":{align:3},"fun-learning":{balance:2,awaken:1},"meditation-relief":{align:2,awaken:2},"meditation-discussion":{awaken:3},"mix-all":{unlimited:2,balance:2}},
+  q4:{consistency:{founding:3,unlimited:2},"where-start":{align:2,awaken:2},time:{classpack:2,balance:2},supported:{unlimited:2,founding:1}},
+  q5:{unpredictable:{classpack:3,balance:2},"few-month":{balance:3},weekly:{align:2,awaken:2},"multi-week":{unlimited:3,founding:2}},
+  q6:{embodied:{align:3,unlimited:1},mystical:{awaken:3},both:{balance:3,unlimited:1}},
+  q7:{"ready-commit":{founding:3,unlimited:2},exploring:{align:2,awaken:1},testing:{classpack:2,balance:1}},
+  q8:{flexibility:{balance:2,classpack:2,align:1},discount:{founding:3,unlimited:2}},
+  q9:{unlimited:{unlimited:3,founding:2},focused:{awaken:3,align:2},variety:{balance:3,unlimited:1},budget:{classpack:3,balance:1}}
+};
+/* Steps config */
+const STEPS = [
+  {n:1,t:'checkbox',name:'q1',legend:'Where are you on your spiritual or healing journey right now?',opts:[
+    ['beginner','I’m just beginning — curious and open.'],
+    ['some-consistency','I’ve explored some classes but want consistency.'],
+    ['commit-dontknow','I want to commit but don’t know where to start.'],
+    ['ready-deepen','I’m committed and ready to deepen.']
+  ]},
+  {n:2,t:'checkbox',name:'q2',legend:'What kind of support are you craving most right now?',opts:[
+    ['calm-stress','Calm and stress relief'],
+    ['physical-healing','Physical healing'],
+    ['clarity-guidance','Clarity and guidance'],
+    ['deeper-modalities','Deeper metaphysical learning & modalities'],
+    ['intuition-tools','Connect to my intuition & learn healing/growth tools'],
+    ['community','Community and connection']
+  ]},
+  {n:3,t:'checkbox',name:'q3',legend:'How would you describe your ideal class experience?',opts:[
+    ['move-breath','Movement and breath to reconnect with my body'],
+    ['fun-learning','Fun learning in a supportive, hands-on atmosphere'],
+    ['meditation-relief','Guidance on meditation and how to feel relief'],
+    ['meditation-discussion','Meditation and discussion that expand awareness'],
+    ['mix-all','A mix of mind, body, and energy together']
+  ]},
+  {n:4,t:'checkbox',name:'q4',legend:'What’s most challenging about your current practice?',opts:[
+    ['consistency','Staying consistent or accountable'],
+    ['where-start','Knowing where to start or what to focus on'],
+    ['time','Finding time for myself'],
+    ['supported','Feeling supported by like-minded people']
+  ]},
+  {n:5,t:'radio',name:'q5',legend:'How often do you see yourself attending classes or workshops?',opts:[
+    ['unpredictable','Not sure — my schedule is unpredictable'],
+    ['few-month','A few times a month — when I can'],
+    ['weekly','Weekly — I want routine with flexibility'],
+    ['multi-week','Multiple times per week — I’m all in']
+  ]},
+  {n:6,t:'radio',name:'q6',legend:'What type of learning experience inspires you most?',opts:[
+    ['embodied','Hands-on and embodied'],
+    ['mystical','Intellectual and mystical'],
+    ['both','Both — I like balancing study with practice']
+  ]},
+  {n:7,t:'radio',name:'q7',legend:'How ready do you feel to invest in your growth right now?',opts:[
+    ['ready-commit','I’m ready to commit and make lasting changes'],
+    ['exploring','I’m exploring what feels aligned — maybe starting small'],
+    ['testing','I’m testing the waters — I want to see how it feels']
+  ]},
+  {n:8,t:'radio',name:'q8',legend:'Would you prefer flexibility or a discount for commitment?',opts:[
+    ['flexibility','Flexibility — I like to keep things open'],
+    ['discount','Discount — I’m ready to commit for savings']
+  ]},
+  {n:9,t:'radio',name:'q9',legend:'What’s most important to you when choosing a membership?',opts:[
+    ['unlimited','Unlimited access to explore everything'],
+    ['focused','A focused path to learn and grow at my pace'],
+    ['variety','Variety and balance across all class types'],
+    ['budget','Budget-friendly flexibility with no pressure']
+  ]}
+];
+/* Render steps */
+const track = document.getElementById('track');
+track.innerHTML = STEPS.map(s=>`
+<form class="step" data-step="${s.n}" novalidate>
+  <fieldset>
+    <legend>${s.legend}</legend>
+    <p class="hint">${s.t==='checkbox'?'Choose up to 2.':'Choose one.'}</p>
+    ${s.opts.map(([v,l])=>`<label class="opt"><input type="${s.t}" name="${s.name}" value="${v}"> ${l}</label>`).join('')}
+  </fieldset>
+</form>`).join('');
+/* Controls */
+const total = STEPS.length;
+document.getElementById('total').textContent = total;
+const nextBtn = document.getElementById('next');
+const backBtn = document.getElementById('back');
+const num = document.getElementById('num');
+const bar = document.getElementById('bar');
+const res = document.getElementById('result');
+const topName = document.getElementById('topName');
+const topWhy = document.getElementById('topWhy');
+const topJoin = document.getElementById('topJoin');
+const topDetails = document.getElementById('topDetails');
+const secondLine = document.getElementById('secondLine');
+const secondLink = document.getElementById('secondLink');
+const retake = document.getElementById('retake');
+const forms = Array.from(document.querySelectorAll('.step'));
+let i=0;
+function isValid(){
+  const f = forms[i];
+  const r = f.querySelectorAll('input[type="radio"]');
+  const c = f.querySelectorAll('input[type="checkbox"]');
+  if(r.length) return !!f.querySelector('input[type="radio"]:checked');
+  if(c.length) return f.querySelectorAll('input[type="checkbox"]:checked').length>=1;
+  return true;
+}
+function limitChecks(){
+  forms.forEach(f=>{
+    const c = f.querySelectorAll('input[type="checkbox"]');
+    if(!c.length) return;
+    f.addEventListener('change', ()=>{
+      const checked = Array.from(c).filter(x=>x.checked);
+      if(checked.length>2){ checked.pop().checked=false; }
+      nextBtn.disabled=!isValid();
+    });
+  });
+}
+function update(){
+  track.style.transform = `translateX(-${i*100}%)`;
+  num.textContent = i+1;
+  bar.style.width = Math.round(((i+1)/total)*100)+'%';
+  backBtn.disabled = i===0;
+  nextBtn.textContent = (i===total-1)?'See Result':'Next';
+  nextBtn.disabled=!isValid();
+  res.hidden = true;
+}
+forms.forEach((f,idx)=>f.addEventListener('change',()=>{ if(idx===i) nextBtn.disabled=!isValid(); }));
+limitChecks();
+update();
+nextBtn.addEventListener('click',()=>{ if(!isValid())return; if(i<total-1){i++;update();}else{showResult();}});
+backBtn.addEventListener('click',()=>{ if(i>0){i--;update();}});
+retake.addEventListener('click',()=>{ document.querySelectorAll('input').forEach(el=>el.checked=false); i=0; res.hidden=true; update(); window.scrollTo({top:0,behavior:'smooth'});});
+function collect(){
+  const a={};
+  ["q1","q2","q3","q4"].forEach(q=>{ a[q]=Array.from(document.querySelectorAll(`input[name="${q}"]:checked`)).map(el=>el.value);});
+  ["q5","q6","q7","q8","q9"].forEach(q=>{ const el=document.querySelector(`input[name="${q}"]:checked`); a[q]=el?el.value:null;});
+  return a;
+}
+function score(ans){
+  const t={unlimited:0,founding:0,align:0,awaken:0,balance:0,classpack:0};
+  for(const q in ans){
+    const vals=Array.isArray(ans[q])?ans[q]:[ans[q]].filter(Boolean);
+    vals.forEach(v=>{
+      const map=W[q]?.[v]||{};
+      for(const k in map) t[k]+=map[k];
+    });
+  }
+  return t;
+}
+function explain(k){
+  return {
+    unlimited:"Unlimited access to everything—perfect when you’re ready for momentum, community, and deep growth with full flexibility (Zoom + video library included).",
+    founding:"Commit and save with our founding rate—ideal if you want consistency, accountability, and lifetime discount pricing once you’ve completed the initial term.",
+    align:"Gentle movement, breath, and nervous system regulation—embodiment practices that create calm, release stress, and help you feel more grounded.",
+    awaken:"Metaphysical education + meditation—learn crystals, astrology, numerology and more while deepening awareness in a supportive community.",
+    balance:"Four in-person classes a month + unlimited Zoom—flexible variety across yoga, meditation, and education without the pressure of unlimited.",
+    classpack:"A flexible, commitment-free way to explore—10 classes to use over 6 months, shareable with friends and perfect for unpredictable schedules."
+  }[k];
+}
+function showResult(){
+  const a=collect();
+  const ok=["q1","q2","q3","q4"].every(k=>a[k]&&a[k].length)&&["q5","q6","q7","q8","q9"].every(k=>!!a[k]);
+  if(!ok) return;
+  const t=score(a);
+  let entries=Object.entries(t).sort((A,B)=>B[1]-A[1]);
+  if(entries.length>1 && entries[0][1]===entries[1][1]){
+    if(a.q7==="ready-commit"){const pref={founding:2,unlimited:1}; entries=entries.sort((x,y)=>(pref[y[0]]||0)-(pref[x[0]]||0)||(t[y[0]]-t[x[0]]));}
+    else if(a.q9==="budget"){const pref={classpack:2,balance:1}; entries=entries.sort((x,y)=>(pref[y[0]]||0)-(pref[x[0]]||0)||(t[y[0]]-t[x[0]]));}
+  }
+  const [top,second]=entries;
+  const labels={unlimited:"Monthly Unlimited Classes",founding:"Founding Unlimited (Contract Savings)",align:"Align Within",awaken:"Awaken Within",balance:"Finding Balance (4 Classes / Mo)",classpack:"10-Class Pack"};
+  topName.textContent = labels[top[0]];
+  topWhy.textContent  = explain(top[0]); // fixed missing bracket from user's snippet
+  topJoin.href = (LINKS[top[0]]?.join)||'#';
+  topDetails.href = (LINKS[top[0]]?.details)||'#';
+  document.getElementById('secondLine').textContent = `Also consider ${labels[second[0]]} — it aligns with several of your answers.`;
+  document.getElementById('secondLink').href = (LINKS[second[0]]?.details)||'#';
+  res.hidden=false;
+  res.scrollIntoView({behavior:'smooth',block:'start'});
+}
+</script>
+</body>
+</html>
